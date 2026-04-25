@@ -1,0 +1,28 @@
+# Go
+bin/
+dist/
+*.test
+*.out
+coverage.txt
+go.sum.bak
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Local data
+data/
+*.sqlite
+
+# Bench artifacts
+bench/reports/raw/

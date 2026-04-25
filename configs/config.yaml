@@ -1,0 +1,33 @@
+app:
+  name: flash-deal
+  http_port: 8080
+  metrics_port: 9100
+
+mysql:
+  shards:
+    - dsn: "flashdeal:flashdeal@tcp(127.0.0.1:3307)/flashdeal?parseTime=true&charset=utf8mb4"
+  max_open_conns: 100
+  max_idle_conns: 20
+
+redis:
+  addr: "127.0.0.1:6380"
+  pool_size: 200
+
+kafka:
+  brokers: ["127.0.0.1:9092"]
+  topic_orders: "seckill_orders"
+  topic_orders_dlq: "seckill_orders_dlq"
+  consumer_group: "seckill-consumer"
+
+ratelimit:
+  global_qps: 100000
+  per_user_rpm: 5
+
+circuit:
+  failure_ratio: 0.3
+  window_seconds: 60
+
+otel:
+  enabled: true
+  endpoint: "http://127.0.0.1:4318"
+  service_name: "flash-deal-api"

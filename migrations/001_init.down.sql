@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS orders_0;
+DROP TABLE IF EXISTS activities;
