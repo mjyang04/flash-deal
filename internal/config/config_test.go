@@ -60,6 +60,25 @@ func TestLoad_KafkaDefaults(t *testing.T) {
 	}
 }
 
+func TestLoad_ShardsAndObservabilityDefaults(t *testing.T) {
+	cfg, err := config.Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.Shards.DSNs) != 4 {
+		t.Errorf("shard count = %d, want 4", len(cfg.Shards.DSNs))
+	}
+	if cfg.RateLimit.PerUserPerMinute != 5 {
+		t.Errorf("PerUserPerMinute = %d", cfg.RateLimit.PerUserPerMinute)
+	}
+	if !cfg.Otel.Enabled || cfg.Otel.ServiceName == "" {
+		t.Errorf("otel defaults missing: %+v", cfg.Otel)
+	}
+	if !cfg.Switches.ShardedOrder || !cfg.Switches.RateLimit || !cfg.Switches.Tracing {
+		t.Errorf("switches not all on: %+v", cfg.Switches)
+	}
+}
+
 func TestLoad_SwitchesOff(t *testing.T) {
 	t.Setenv("FD_SWITCHES_LUA_STOCK", "false")
 	t.Setenv("FD_SWITCHES_KAFKA_ORDER", "false")
