@@ -21,6 +21,15 @@ kafka-topic:
 	docker exec fd-kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 \
 	  --create --if-not-exists --topic seckill_orders_dlq --partitions 4 --replication-factor 1
 
+migrate-shards:
+	docker exec -i fd-mysql mysql -uroot -prootpw < migrations/002_orders_shards.up.sql
+	@for n in 0 1 2 3; do \
+	  echo "applying orders DDL to flashdeal_$$n"; \
+	  docker exec -i fd-mysql mysql -uflashdeal -pflashdeal flashdeal_$$n < migrations/002_orders_shards_table.sql; \
+	done
+
+migrate-all: migrate migrate-shards
+
 seed:
 	go run ./cmd/seed
 
