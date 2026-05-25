@@ -4,7 +4,7 @@ package redis
 import (
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/config"
 )
 
 // New returns a configured *goredis.Client. Caller closes.

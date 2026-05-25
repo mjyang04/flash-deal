@@ -10,10 +10,10 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
-	"github.com/mjyangnb/flash-deal/internal/repo"
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
+	"github.com/mjyang04/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 type memOrderRepo struct {

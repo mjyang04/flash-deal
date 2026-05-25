@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 // AdminService is the port admin handlers depend on.

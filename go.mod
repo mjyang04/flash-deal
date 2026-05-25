@@ -1,4 +1,4 @@
-module github.com/mjyangnb/flash-deal
+module github.com/mjyang04/flash-deal
 
 go 1.25.0
 

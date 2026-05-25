@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
-	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
+	"github.com/mjyang04/flash-deal/internal/config"
+	fdmysql "github.com/mjyang04/flash-deal/internal/infra/mysql"
 )
 
 func TestOpen_Ping(t *testing.T) {

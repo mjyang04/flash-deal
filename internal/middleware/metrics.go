@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/infra/metrics"
+	"github.com/mjyang04/flash-deal/internal/infra/metrics"
 )
 
 // Metrics records http_request_duration_seconds per route + status.

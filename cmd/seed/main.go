@@ -16,12 +16,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
-	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
-	"github.com/mjyangnb/flash-deal/internal/repo"
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	fdmysql "github.com/mjyang04/flash-deal/internal/infra/mysql"
+	fdredis "github.com/mjyang04/flash-deal/internal/infra/redis"
+	"github.com/mjyang04/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 func main() {

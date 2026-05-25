@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
 )
 
 // KafkaOrderCreator implements OrderCreator + OrderCreatorWithToken; instead

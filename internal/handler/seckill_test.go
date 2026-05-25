@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/handler"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/handler"
 )
 
 type stubSvc struct {

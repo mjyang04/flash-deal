@@ -12,7 +12,7 @@ import (
 
 	segkafka "github.com/segmentio/kafka-go"
 
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
 )
 
 func brokers(t *testing.T) []string {

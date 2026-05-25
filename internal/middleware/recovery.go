@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/mjyangnb/flash-deal/internal/infra/logger"
+	"github.com/mjyang04/flash-deal/internal/infra/logger"
 )
 
 // Recovery converts panics into 500 + structured log including X-Request-Id.

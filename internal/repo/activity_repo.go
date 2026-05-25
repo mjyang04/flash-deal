@@ -9,7 +9,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 // ErrActivityNotFound is returned by ActivityRepo.GetByID when no row matches.

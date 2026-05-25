@@ -9,7 +9,7 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 func TestQueue_NewAndGet(t *testing.T) {

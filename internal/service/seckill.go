@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 // ---- ports (subset of repo interfaces) ----

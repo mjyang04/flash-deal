@@ -11,7 +11,7 @@
 **Scope:** Week 1 / Day 1-7 / Tag `m1` 之前的全部工作。**不在本 plan**:Redis Lua 原子扣减(M2)、Kafka producer/consumer(M2)、分库分表(M3)、限流熔断(M3)、OTel 全链路(M3)、压测优化(M4)。
 
 **前置状态(已就绪,无需重新做):**
-- `go.mod` 已声明 module `github.com/mjyangnb/flash-deal`,依赖完整(gin / go-redis / kafka-go / sqlx / viper / zap / gobreaker / otel / prometheus)
+- `go.mod` 已声明 module `github.com/mjyang04/flash-deal`,依赖完整(gin / go-redis / kafka-go / sqlx / viper / zap / gobreaker / otel / prometheus)
 - `internal/domain/seckill.go` 已含 `Activity`、`Order`、`SeckillRequest`、`SeckillResult`、枚举常量
 - `pkg/shardkey/shardkey.go` + 测试已就绪
 - `internal/infra/redis/scripts/stock_deduct.lua` 已就绪(M2 才会调用)
@@ -158,7 +158,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/config"
 )
 
 func TestLoad_Defaults(t *testing.T) {
@@ -384,8 +384,8 @@ import (
 	"testing"
 	"time"
 
-	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
-	"github.com/mjyangnb/flash-deal/internal/config"
+	fdmysql "github.com/mjyang04/flash-deal/internal/infra/mysql"
+	"github.com/mjyang04/flash-deal/internal/config"
 )
 
 func TestOpen_Ping(t *testing.T) {
@@ -430,7 +430,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql" // driver
 
-	"github.com/mjyangnb/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/config"
 )
 
 // Open returns a tuned *sqlx.DB. Caller closes.
@@ -485,8 +485,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
-	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
+	"github.com/mjyang04/flash-deal/internal/config"
+	fdredis "github.com/mjyang04/flash-deal/internal/infra/redis"
 )
 
 func TestNew_Ping(t *testing.T) {
@@ -522,7 +522,7 @@ package redis
 import (
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/config"
 )
 
 // New returns a configured *goredis.Client. Caller closes.
@@ -606,7 +606,7 @@ package domain_test
 import (
 	"testing"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 func TestSeckillOutcome_String(t *testing.T) {
@@ -672,8 +672,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 func openTestDB(t *testing.T) *sqlx.DB {
@@ -756,7 +756,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 // ErrActivityNotFound is returned by ActivityRepo.GetByID when no row matches.
@@ -862,8 +862,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 func resetOrders(t *testing.T, db *sqlx.DB) {
@@ -941,7 +941,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 // ErrOrderNotFound — no order for the given (user_id, order_id).
@@ -1060,8 +1060,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 func TestStockRepo_Deduct_NoOversell(t *testing.T) {
@@ -1213,9 +1213,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 // ---- in-memory mocks ----
@@ -1396,8 +1396,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 // ---- ports (subset of repo interfaces) ----
@@ -1563,7 +1563,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/mjyangnb/flash-deal/internal/infra/logger"
+	"github.com/mjyang04/flash-deal/internal/infra/logger"
 )
 
 // Recovery converts panics into 500 + structured log including X-Request-Id.
@@ -1634,8 +1634,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/handler"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/handler"
 )
 
 type stubSvc struct {
@@ -1734,8 +1734,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/middleware"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/middleware"
 )
 
 // SeckillOutput mirrors service.SeckillOutput so the handler can depend on its
@@ -1824,8 +1824,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/handler"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/handler"
 )
 
 type adminStub struct {
@@ -1891,7 +1891,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 // AdminService is the port admin handlers depend on.
@@ -1971,8 +1971,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 type AdminService struct {
@@ -2026,14 +2026,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
-	"github.com/mjyangnb/flash-deal/internal/handler"
-	"github.com/mjyangnb/flash-deal/internal/infra/logger"
-	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
-	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
-	"github.com/mjyangnb/flash-deal/internal/middleware"
-	"github.com/mjyangnb/flash-deal/internal/repo"
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/handler"
+	"github.com/mjyang04/flash-deal/internal/infra/logger"
+	fdmysql "github.com/mjyang04/flash-deal/internal/infra/mysql"
+	fdredis "github.com/mjyang04/flash-deal/internal/infra/redis"
+	"github.com/mjyang04/flash-deal/internal/middleware"
+	"github.com/mjyang04/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 func main() {
@@ -2129,7 +2129,7 @@ type domainSeckillReq = struct {
 ```go
 import (
 	...
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 type serviceHandlerAdapter struct {
@@ -2217,12 +2217,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
-	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
-	"github.com/mjyangnb/flash-deal/internal/repo"
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	fdmysql "github.com/mjyang04/flash-deal/internal/infra/mysql"
+	fdredis "github.com/mjyang04/flash-deal/internal/infra/redis"
+	"github.com/mjyang04/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 func main() {
@@ -2528,7 +2528,7 @@ Expected:看到 m1 tag 指向最后一个 commit
 | Spec 覆盖:milestone.md Day 1-7 全部映射到 Task | ✅(Day 1-2 → Task 0;Day 3-4 → Task 1-9;Day 5 → Task 10-12;Day 6 → Task 14-15;Day 7 → Task 16) |
 | Placeholder 扫描:无 TBD / TODO / "类似 Task N" | ✅ |
 | 类型一致:`Outcome` 在 domain 定义,service 用,handler 用同一 enum | ✅ |
-| 与已有 scaffold 一致:module path `github.com/mjyangnb/flash-deal`、`orders_0`、Redis port 6380、MySQL port 3307 | ✅ |
+| 与已有 scaffold 一致:module path `github.com/mjyang04/flash-deal`、`orders_0`、Redis port 6380、MySQL port 3307 | ✅ |
 | 不引入 M2+ 依赖(Kafka producer / Lua / otel) | ✅(cmd/api 只 import M1 必需模块) |
 
 ---

@@ -5,7 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // driver
 	"github.com/jmoiron/sqlx"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/config"
 )
 
 // Open returns a tuned *sqlx.DB. Caller closes.

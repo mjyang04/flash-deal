@@ -3,7 +3,7 @@ package domain_test
 import (
 	"testing"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/domain"
 )
 
 func TestSeckillOutcome_String(t *testing.T) {

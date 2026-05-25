@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
+	"github.com/mjyang04/flash-deal/internal/config"
 )
 
 func TestLoad_Defaults(t *testing.T) {

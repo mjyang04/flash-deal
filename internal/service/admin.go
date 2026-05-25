@@ -7,8 +7,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 type AdminService struct {

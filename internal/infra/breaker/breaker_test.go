@@ -7,7 +7,7 @@ import (
 
 	"github.com/sony/gobreaker"
 
-	"github.com/mjyangnb/flash-deal/internal/infra/breaker"
+	"github.com/mjyang04/flash-deal/internal/infra/breaker"
 )
 
 func TestBreaker_TripsOnHighFailure(t *testing.T) {

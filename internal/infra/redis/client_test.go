@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
-	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
+	"github.com/mjyang04/flash-deal/internal/config"
+	fdredis "github.com/mjyang04/flash-deal/internal/infra/redis"
 )
 
 func TestNew_Ping(t *testing.T) {

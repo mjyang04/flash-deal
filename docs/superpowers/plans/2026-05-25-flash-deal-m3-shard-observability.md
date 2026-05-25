@@ -289,8 +289,8 @@ import (
     "fmt"
     "github.com/jmoiron/sqlx"
 
-    "github.com/mjyangnb/flash-deal/internal/domain"
-    "github.com/mjyangnb/flash-deal/pkg/shardkey"
+    "github.com/mjyang04/flash-deal/internal/domain"
+    "github.com/mjyang04/flash-deal/pkg/shardkey"
 )
 
 type shardedOrderRepo struct {
@@ -603,7 +603,7 @@ import (
     "strconv"
     "time"
     "github.com/gin-gonic/gin"
-    "github.com/mjyangnb/flash-deal/internal/infra/metrics"
+    "github.com/mjyang04/flash-deal/internal/infra/metrics"
 )
 
 func Metrics() gin.HandlerFunc {

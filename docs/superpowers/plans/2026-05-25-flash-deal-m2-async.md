@@ -360,7 +360,7 @@ import (
 
 	segkafka "github.com/segmentio/kafka-go"
 
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
 )
 
 func brokers(t *testing.T) []string {
@@ -704,7 +704,7 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 func openTestRedis(t *testing.T) *goredis.Client {
@@ -876,9 +876,9 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
-	"github.com/mjyangnb/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
+	"github.com/mjyang04/flash-deal/internal/repo"
 )
 
 // OrderMaterializer is the consumer-side business: turn a Kafka OrderMessage
@@ -931,10 +931,10 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
-	"github.com/mjyangnb/flash-deal/internal/repo"
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
+	"github.com/mjyang04/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 type memOrderRepo struct {
@@ -1050,7 +1050,7 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 func TestQueue_NewAndGet(t *testing.T) {
@@ -1075,8 +1075,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/mjyangnb/flash-deal/internal/domain"
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
+	"github.com/mjyang04/flash-deal/internal/domain"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
 )
 
 // KafkaOrderCreator implements OrderCreator (used by SeckillService) but
@@ -1216,7 +1216,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mjyangnb/flash-deal/internal/handler"
+	"github.com/mjyang04/flash-deal/internal/handler"
 )
 
 type stubQueue struct{ state string }
@@ -1342,13 +1342,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mjyangnb/flash-deal/internal/config"
-	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
-	"github.com/mjyangnb/flash-deal/internal/infra/logger"
-	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
-	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
-	"github.com/mjyangnb/flash-deal/internal/repo"
-	"github.com/mjyangnb/flash-deal/internal/service"
+	"github.com/mjyang04/flash-deal/internal/config"
+	fdkafka "github.com/mjyang04/flash-deal/internal/infra/kafka"
+	"github.com/mjyang04/flash-deal/internal/infra/logger"
+	fdmysql "github.com/mjyang04/flash-deal/internal/infra/mysql"
+	fdredis "github.com/mjyang04/flash-deal/internal/infra/redis"
+	"github.com/mjyang04/flash-deal/internal/repo"
+	"github.com/mjyang04/flash-deal/internal/service"
 )
 
 func main() {

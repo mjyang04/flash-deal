@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/infra/metrics"
+	"github.com/mjyang04/flash-deal/internal/infra/metrics"
 )
 
 const idemTTL = 24 * time.Hour

@@ -10,7 +10,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"golang.org/x/time/rate"
 
-	"github.com/mjyangnb/flash-deal/internal/infra/metrics"
+	"github.com/mjyang04/flash-deal/internal/infra/metrics"
 )
 
 // RateLimit returns Gin middleware that enforces:

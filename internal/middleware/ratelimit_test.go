@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/mjyangnb/flash-deal/internal/middleware"
+	"github.com/mjyang04/flash-deal/internal/middleware"
 )
 
 func TestRateLimit_PerUser(t *testing.T) {
