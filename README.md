@@ -68,7 +68,7 @@ Task-by-task implementation plans (subagent-driven, TDD):
 - [x] **M1 MVP single-node end-to-end** (tag `m1`, baseline: [`reports/week1_mvp.md`](./reports/week1_mvp.md))
 - [x] **M2 Redis Lua + Kafka async** (tag `m2`, ~200× P95 improvement: [`reports/week2_redis_kafka.md`](./reports/week2_redis_kafka.md))
 - [x] **M3 Sharding + ratelimit/idempotency/breaker + OTel/Prom/Grafana** (tag `m3`, [`reports/week3_observability.md`](./reports/week3_observability.md))
-- [ ] M4 Load test + optimization + blog
+- [x] **M4 pprof + final report + release** (tag `m4-release`, [`reports/final.md`](./reports/final.md) + [`reports/profiling.md`](./reports/profiling.md))
 
 ## Prerequisites
 - Docker Desktop

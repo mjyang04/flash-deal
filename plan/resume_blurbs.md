@@ -1,16 +1,16 @@
 # flash-deal — Resume & Interview Blurbs
 
-Fill in real numbers from `reports/final.md` after Week 4.
+Numbers below are from `reports/final.md` (M4, single-host bench).
 
 ## Resume bullet (English)
 
 > **flash-deal** — Production-grade Go flash-sale system. Atomic Redis Lua stock reservation + Kafka async order materialization + 4-shard MySQL + token-bucket rate-limit + sliding-window circuit breaker + OTel/Prometheus.
-> Sustained **__,000 QPS single-node** at P99 < **__ ms**; concurrency tests prove **zero overselling and zero underselling** under 10k goroutine contention; chaos tests verify graceful recovery from MySQL / Kafka / consumer outages.
+> Drove **P95 from 2,380 ms (sync SQL row-lock) down to 11.6 ms (Lua + async Kafka) at 1,000 rps single-node — ~205× improvement** with the same correctness guarantee; concurrency tests prove **zero overselling** under 1,000-goroutine contention against 100-stock window; chaos scripts cover consumer / shard / Redis / Kafka kill scenarios; full distributed trace via OTel propagated across Kafka boundary.
 
 ## Resume bullet (中文)
 
-> **flash-deal** — 生产级 Go 秒杀系统。Redis Lua 原子扣库存 + Kafka 异步落单 + MySQL 分库分表(×4)+ 令牌桶限流 + 滑动窗口熔断 + OTel/Prometheus 全链路。
-> 单机 **__万 QPS**,P99 < **__ ms**;并发正确性测试验证 **零超卖、零少卖**;Chaos 测试验证 MySQL / Kafka / Consumer 故障下的优雅降级与恢复。
+> **flash-deal** — 生产级 Go 秒杀系统。Redis Lua 原子扣库存 + Kafka 异步落单 + MySQL 分库分表(×4)+ 令牌桶限流 + 幂等中间件(SETNX+缓存响应)+ gobreaker 熔断 + OTel/Prometheus/Grafana 全链路。
+> 同 1,000 rps 单机条件下,**P95 从 2,380 ms(同步 SQL 行锁)优化到 11.6 ms(Lua + Kafka 异步)— 提升约 205×**,正确性不损;1,000 协程抢 100 库存并发测试 **success=100、soldOut=900、零超卖**;基于 pprof 数据决定**不做未验证的优化**(`sync.Pool` / pool 扩张 / GC 调优在该场景下都被 profile 否决);全链路 trace 跨 Kafka 边界透传。
 
 ## STAR-format interview answer
 
@@ -26,7 +26,7 @@ Fill in real numbers from `reports/final.md` after Week 4.
 - **Middleware stack**: token-bucket per-user limit, gobreaker circuit breaker, OTel propagation across kafka boundary
 - **Bench protocol** documented (`plan/bench_protocol.md`) so numbers are reproducible
 
-**R**: ___k QPS sustained, P99 ___ ms, zero oversell across 10k-goroutine stress, full Grafana dashboard, blog at ___ reads.
+**R**: P95 ~12 ms sustained @ 1.5k rps single-host (M3 stack: 4-shard + middleware + observability); ~205× P95 improvement vs M1 same workload; zero oversell across 1k-goroutine stress; Grafana 6-panel dashboard + Jaeger trace across api → kafka → consumer. Single-host client/server share = bench cap; multi-host 30k QPS path documented in [`docs/superpowers/plans/2026-05-25-flash-deal-m4-optimize-release.md`](../docs/superpowers/plans/2026-05-25-flash-deal-m4-optimize-release.md).
 
 ## Likely deep-dive interview questions
 
