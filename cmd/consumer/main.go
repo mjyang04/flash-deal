@@ -10,14 +10,20 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/jmoiron/sqlx"
+
 	"github.com/mjyangnb/flash-deal/internal/config"
+	"github.com/mjyangnb/flash-deal/internal/infra/breaker"
 	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
 	"github.com/mjyangnb/flash-deal/internal/infra/logger"
+	"github.com/mjyangnb/flash-deal/internal/infra/metrics"
 	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
+	fdotel "github.com/mjyangnb/flash-deal/internal/infra/otel"
 	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
 	"github.com/mjyangnb/flash-deal/internal/repo"
 	"github.com/mjyangnb/flash-deal/internal/service"
@@ -32,16 +38,60 @@ func main() {
 		log.Fatalf("logger: %v", err)
 	}
 
+	rootCtx := context.Background()
+	if cfg.Switches.Tracing && cfg.Otel.Enabled {
+		shutdown, err := fdotel.Init(rootCtx, cfg.Otel.OTLPEndpoint, "flash-deal-consumer")
+		if err != nil {
+			log.Printf("otel: %v", err)
+		} else {
+			defer shutdown(context.Background())
+		}
+	}
+
 	db, err := fdmysql.Open(cfg.MySQL)
 	if err != nil {
 		log.Fatalf("mysql: %v", err)
 	}
 	defer db.Close()
+
+	var shards []*sqlx.DB
+	if cfg.Switches.ShardedOrder {
+		for _, dsn := range cfg.Shards.DSNs {
+			s, err := fdmysql.Open(config.MySQLConfig{
+				DSN:             dsn,
+				MaxOpenConns:    cfg.Shards.MaxOpenConns,
+				MaxIdleConns:    cfg.Shards.MaxIdleConns,
+				ConnMaxLifetime: cfg.MySQL.ConnMaxLifetime,
+			})
+			if err != nil {
+				log.Fatalf("shard %s: %v", dsn, err)
+			}
+			defer s.Close()
+			shards = append(shards, s)
+		}
+	}
+
 	rdb := fdredis.New(cfg.Redis)
 	defer rdb.Close()
 
-	orders := repo.NewOrderRepo(db)
+	var orders repo.OrderRepo
+	if cfg.Switches.ShardedOrder && len(shards) > 0 {
+		orders = repo.NewShardedOrderRepo(shards)
+	} else {
+		orders = repo.NewOrderRepo(db)
+	}
+
 	mat := service.NewOrderMaterializer(orders, rdb)
+	if cfg.Switches.CircuitBreaker {
+		mat = mat.WithBreaker(breaker.New(breaker.Config{
+			Name:         cfg.Breaker.Name,
+			MaxRequests:  cfg.Breaker.MaxRequests,
+			Interval:     cfg.Breaker.Interval,
+			Timeout:      cfg.Breaker.Timeout,
+			FailureRatio: cfg.Breaker.FailureRatio,
+		}))
+		log.Println("circuit breaker: on")
+	}
 
 	dlqProd, err := fdkafka.NewProducer(cfg.Kafka.Brokers, cfg.Kafka.ProduceTimeout)
 	if err != nil {
@@ -52,19 +102,30 @@ func main() {
 	c := fdkafka.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.OrderTopic, cfg.Kafka.ConsumerGroup, cfg.Kafka.ConsumerBatchWait, 3)
 	c.SetHandler(mat.Handle)
 	c.SetDLQ(func(ctx context.Context, raw []byte, reason error) {
-		log.Printf("DLQ: %v raw=%s", reason, string(raw))
-		// Try to recover the queue token from the original message and mark failed.
+		log.Printf("DLQ: %v", reason)
+		metrics.DLQTotal.WithLabelValues(reason.Error()).Inc()
 		var om fdkafka.OrderMessage
 		if jerr := json.Unmarshal(raw, &om); jerr == nil && om.QueueToken != "" {
 			mat.MarkFailed(ctx, om.QueueToken, reason)
 		}
-		// Best-effort republish to DLQ topic.
 		if om.OrderID != 0 {
 			_ = dlqProd.SendOrder(ctx, cfg.Kafka.DLQTopic, om)
 		}
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
+	// metrics HTTP server
+	if cfg.Switches.Metrics {
+		go func() {
+			mux := http.NewServeMux()
+			mux.Handle("/metrics", metrics.Handler())
+			log.Println("consumer metrics on :8090")
+			if err := http.ListenAndServe(":8090", mux); err != nil {
+				log.Printf("metrics: %v", err)
+			}
+		}()
+	}
+
+	ctx, cancel := context.WithCancel(rootCtx)
 	defer cancel()
 
 	stop := make(chan os.Signal, 1)

@@ -2,7 +2,7 @@
 //
 // Run:
 //
-//	make up && make migrate && make kafka-topic && go run ./cmd/api
+//	make up && make migrate-all && make kafka-topic && go run ./cmd/api
 package main
 
 import (
@@ -17,13 +17,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/mjyangnb/flash-deal/internal/config"
 	"github.com/mjyangnb/flash-deal/internal/domain"
 	"github.com/mjyangnb/flash-deal/internal/handler"
 	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
 	"github.com/mjyangnb/flash-deal/internal/infra/logger"
+	"github.com/mjyangnb/flash-deal/internal/infra/metrics"
 	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
+	fdotel "github.com/mjyangnb/flash-deal/internal/infra/otel"
 	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
 	"github.com/mjyangnb/flash-deal/internal/middleware"
 	"github.com/mjyangnb/flash-deal/internal/repo"
@@ -39,11 +42,41 @@ func main() {
 		log.Fatalf("logger: %v", err)
 	}
 
+	rootCtx := context.Background()
+	if cfg.Switches.Tracing && cfg.Otel.Enabled {
+		shutdown, err := fdotel.Init(rootCtx, cfg.Otel.OTLPEndpoint, cfg.Otel.ServiceName)
+		if err != nil {
+			log.Printf("otel init: %v (continuing without tracing)", err)
+		} else {
+			defer shutdown(context.Background())
+			log.Println("otel: tracing enabled")
+		}
+	}
+
+	// activity DB (single) + sharded DBs (4)
 	db, err := fdmysql.Open(cfg.MySQL)
 	if err != nil {
 		log.Fatalf("mysql open: %v", err)
 	}
 	defer db.Close()
+
+	var shards []*sqlx.DB
+	if cfg.Switches.ShardedOrder {
+		for _, dsn := range cfg.Shards.DSNs {
+			s, err := fdmysql.Open(config.MySQLConfig{
+				DSN:             dsn,
+				MaxOpenConns:    cfg.Shards.MaxOpenConns,
+				MaxIdleConns:    cfg.Shards.MaxIdleConns,
+				ConnMaxLifetime: cfg.MySQL.ConnMaxLifetime,
+			})
+			if err != nil {
+				log.Fatalf("open shard %s: %v", dsn, err)
+			}
+			defer s.Close()
+			shards = append(shards, s)
+		}
+		log.Printf("order: sharded × %d", len(shards))
+	}
 
 	rdb := fdredis.New(cfg.Redis)
 	defer rdb.Close()
@@ -52,10 +85,16 @@ func main() {
 	var sr repo.StockRepo
 	if cfg.Switches.LuaStock {
 		sr = repo.NewStockRedisRepo(rdb)
-		log.Println("stock: Redis Lua path")
+		log.Println("stock: Redis Lua")
 	} else {
 		sr = repo.NewStockRepo(db)
-		log.Println("stock: SQL row-lock path (M1 fallback)")
+	}
+
+	var or repo.OrderRepo
+	if cfg.Switches.ShardedOrder && len(shards) > 0 {
+		or = repo.NewShardedOrderRepo(shards)
+	} else {
+		or = repo.NewOrderRepo(db)
 	}
 
 	queue := service.NewQueue(rdb)
@@ -70,8 +109,7 @@ func main() {
 		oc = service.NewKafkaOrderCreator(producer, cfg.Kafka.OrderTopic)
 		log.Printf("order: Kafka producer → %s", cfg.Kafka.OrderTopic)
 	} else {
-		oc = repo.NewOrderRepo(db)
-		log.Println("order: synchronous MySQL INSERT (M1 fallback)")
+		oc = or
 	}
 
 	var idCounter int64
@@ -82,9 +120,22 @@ func main() {
 
 	r := gin.New()
 	r.Use(middleware.RequestID(), middleware.Recovery())
+	if cfg.Switches.Metrics {
+		r.Use(middleware.Metrics())
+	}
+	if cfg.Switches.RateLimit {
+		r.Use(middleware.RateLimit(rdb, cfg.RateLimit.PerUserPerMinute, cfg.RateLimit.GlobalQPS, cfg.RateLimit.GlobalBurst))
+	}
 
 	r.GET("/health", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
-	r.POST("/v1/seckill", handler.Seckill(serviceHandlerAdapter{inner: seckillSvc}))
+	r.GET("/metrics", gin.WrapH(metrics.Handler()))
+
+	seckill := r.Group("/v1")
+	if cfg.Switches.Idempotency {
+		seckill.Use(middleware.Idempotency(rdb))
+	}
+	seckill.POST("/seckill", handler.Seckill(serviceHandlerAdapter{inner: seckillSvc}))
+
 	r.GET("/v1/order/by-token/:queue_token", handler.OrderByToken(queue))
 	r.POST("/admin/activities", handler.AdminCreateActivity(adminSvc))
 	r.POST("/admin/activities/:id/warm", handler.AdminWarmActivity(adminSvc))
