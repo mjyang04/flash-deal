@@ -19,6 +19,7 @@ func TestSeckillOutcome_String(t *testing.T) {
 		{domain.OutcomeEnded, "ended"},
 		{domain.OutcomeNotFound, "not_found"},
 		{domain.OutcomeInternal, "internal"},
+		{domain.OutcomeNotWarmed, "not_warmed"},
 	}
 	for _, c := range cases {
 		if got := c.o.String(); got != c.want {
