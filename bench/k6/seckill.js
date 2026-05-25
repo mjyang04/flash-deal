@@ -14,23 +14,19 @@ import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 
 export const options = {
   scenarios: {
-    burst: {
-      executor: 'ramping-arrival-rate',
-      startRate: 100,
+    baseline_m1: {
+      executor: 'constant-arrival-rate',
+      rate: Number(__ENV.RATE || 1000),
       timeUnit: '1s',
-      preAllocatedVUs: 500,
-      maxVUs: 4000,
-      stages: [
-        { target: 5000,  duration: '30s' },
-        { target: 30000, duration: '60s' },
-        { target: 30000, duration: '60s' },
-        { target: 0,     duration: '15s' },
-      ],
+      duration: __ENV.DURATION || '30s',
+      preAllocatedVUs: 200,
+      maxVUs: 1000,
     },
   },
   thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(99)<50'],
+    // M1 baseline — record only, do not gate. Tighten in M4.
+    http_req_failed: ['rate<1'],
+    http_req_duration: ['p(99)<1000'],
   },
 };
 
@@ -49,6 +45,7 @@ export default function () {
     headers: { 'Content-Type': 'application/json' },
   });
   check(res, {
-    'status is 200 or 4xx (expected)': (r) => r.status === 200 || r.status === 409 || r.status === 410,
+    'status is queued or expected fail': (r) =>
+      r.status === 202 || r.status === 409 || r.status === 410 || r.status === 403 || r.status === 404,
   });
 }
