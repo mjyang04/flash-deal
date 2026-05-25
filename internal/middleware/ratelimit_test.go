@@ -3,6 +3,7 @@
 package middleware_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,7 +18,7 @@ func TestRateLimit_PerUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	rdb := goredis.NewClient(&goredis.Options{Addr: "127.0.0.1:6380"})
 	defer rdb.Close()
-	rdb.Del(rdb.Context(), "ratelimit:user:U1")
+	rdb.Del(context.Background(), "ratelimit:user:U1")
 
 	r := gin.New()
 	r.Use(middleware.RateLimit(rdb, 3, 100000, 1000))
