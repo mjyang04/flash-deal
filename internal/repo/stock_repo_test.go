@@ -32,10 +32,11 @@ func TestStockRepo_Deduct_NoOversell(t *testing.T) {
 	var success, soldOut int32
 	var wg sync.WaitGroup
 	for i := 0; i < 1000; i++ {
+		i := i
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_, err := sr.Deduct(context.Background(), 8001, 1)
+			_, err := sr.DeductForUser(context.Background(), 8001, int64(i+1), 1, 1)
 			switch err {
 			case nil:
 				atomic.AddInt32(&success, 1)

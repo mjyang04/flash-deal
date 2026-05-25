@@ -34,7 +34,7 @@ type fakeStockRepo struct {
 	err       error
 }
 
-func (f *fakeStockRepo) Deduct(_ context.Context, _ int64, n int) (int, error) {
+func (f *fakeStockRepo) DeductForUser(_ context.Context, _, _ int64, n, _ int) (int, error) {
 	if f.err != nil {
 		return 0, f.err
 	}
@@ -152,6 +152,26 @@ func TestSeckill_Duplicate(t *testing.T) {
 	res, _ := svc.Seckill(context.Background(), domain.SeckillRequest{ActivityID: 9001, UserID: 1, IdempotencyToken: "x"})
 	if res.Outcome != domain.OutcomeDuplicate {
 		t.Errorf("outcome = %v, want Duplicate", res.Outcome)
+	}
+}
+
+func TestSeckill_UserLimit(t *testing.T) {
+	ar := &fakeActivityRepo{store: map[int64]domain.Activity{9001: runningActivity()}}
+	sr := &fakeStockRepo{err: repo.ErrUserLimitExceeded}
+	svc := newSvc(ar, sr, &fakeOrderRepo{})
+	res, _ := svc.Seckill(context.Background(), domain.SeckillRequest{ActivityID: 9001, UserID: 1, IdempotencyToken: "x"})
+	if res.Outcome != domain.OutcomeUserLimit {
+		t.Errorf("outcome = %v, want UserLimit", res.Outcome)
+	}
+}
+
+func TestSeckill_NotWarmed(t *testing.T) {
+	ar := &fakeActivityRepo{store: map[int64]domain.Activity{9001: runningActivity()}}
+	sr := &fakeStockRepo{err: repo.ErrStockNotWarmed}
+	svc := newSvc(ar, sr, &fakeOrderRepo{})
+	res, _ := svc.Seckill(context.Background(), domain.SeckillRequest{ActivityID: 9001, UserID: 1, IdempotencyToken: "x"})
+	if res.Outcome != domain.OutcomeNotWarmed {
+		t.Errorf("outcome = %v, want NotWarmed", res.Outcome)
 	}
 }
 

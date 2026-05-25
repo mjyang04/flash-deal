@@ -10,11 +10,20 @@ import (
 // ErrStockNotEnough — UPDATE matched 0 rows, stock would go negative.
 var ErrStockNotEnough = errors.New("stock not enough")
 
+// ErrStockNotWarmed — Redis stock key missing (Lua only).
+var ErrStockNotWarmed = errors.New("stock not warmed")
+
+// ErrUserLimitExceeded — per-user purchased count would exceed limit (Lua only).
+var ErrUserLimitExceeded = errors.New("user limit exceeded")
+
 // StockRepo is the seckill stock port. M1 = SQL row lock; M2 = Redis Lua.
 type StockRepo interface {
-	// Deduct atomically subtracts n from activity's total_stock when remaining >= n.
-	// Returns the post-deduction remaining stock, or ErrStockNotEnough.
-	Deduct(ctx context.Context, activityID int64, n int) (remaining int, err error)
+	// DeductForUser atomically subtracts n from activity stock.
+	// userID + perUserLimit are honored by the Redis Lua impl;
+	// the SQL impl ignores them (M1 didn't track per-user state).
+	// Returns the post-deduction remaining stock, or one of:
+	// ErrStockNotEnough / ErrStockNotWarmed / ErrUserLimitExceeded.
+	DeductForUser(ctx context.Context, activityID, userID int64, n, perUserLimit int) (remaining int, err error)
 }
 
 type stockRepoSQL struct {
@@ -25,7 +34,7 @@ func NewStockRepo(db *sqlx.DB) StockRepo {
 	return &stockRepoSQL{db: db}
 }
 
-func (r *stockRepoSQL) Deduct(ctx context.Context, activityID int64, n int) (int, error) {
+func (r *stockRepoSQL) DeductForUser(ctx context.Context, activityID, _ int64, n, _ int) (int, error) {
 	const upd = `
 UPDATE activities
    SET total_stock = total_stock - ?

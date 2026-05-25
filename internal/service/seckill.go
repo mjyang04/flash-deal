@@ -21,7 +21,7 @@ type ActivityFetcher interface {
 }
 
 type StockDeducter interface {
-	Deduct(ctx context.Context, activityID int64, n int) (remaining int, err error)
+	DeductForUser(ctx context.Context, activityID, userID int64, n, perUserLimit int) (remaining int, err error)
 }
 
 type OrderCreator interface {
@@ -74,9 +74,15 @@ func (s *SeckillService) Seckill(ctx context.Context, req domain.SeckillRequest)
 		return SeckillOutput{Outcome: domain.OutcomeEnded}, nil
 	}
 
-	remaining, err := s.stock.Deduct(ctx, req.ActivityID, 1)
+	remaining, err := s.stock.DeductForUser(ctx, req.ActivityID, req.UserID, 1, a.PerUserLimit)
 	if errors.Is(err, repo.ErrStockNotEnough) {
 		return SeckillOutput{Outcome: domain.OutcomeSoldOut}, nil
+	}
+	if errors.Is(err, repo.ErrUserLimitExceeded) {
+		return SeckillOutput{Outcome: domain.OutcomeUserLimit}, nil
+	}
+	if errors.Is(err, repo.ErrStockNotWarmed) {
+		return SeckillOutput{Outcome: domain.OutcomeNotWarmed}, nil
 	}
 	if err != nil {
 		return SeckillOutput{Outcome: domain.OutcomeInternal}, err
