@@ -43,3 +43,28 @@ func TestLoad_EnvOverride(t *testing.T) {
 		t.Errorf("DSN override missed: %q", cfg.MySQL.DSN)
 	}
 }
+
+func TestLoad_KafkaDefaults(t *testing.T) {
+	cfg, err := config.Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Kafka.OrderTopic != "seckill_orders" {
+		t.Errorf("OrderTopic = %q", cfg.Kafka.OrderTopic)
+	}
+	if len(cfg.Kafka.Brokers) != 1 || cfg.Kafka.Brokers[0] != "127.0.0.1:9092" {
+		t.Errorf("Brokers = %v", cfg.Kafka.Brokers)
+	}
+	if !cfg.Switches.LuaStock || !cfg.Switches.KafkaOrder {
+		t.Errorf("Switches not on by default: %+v", cfg.Switches)
+	}
+}
+
+func TestLoad_SwitchesOff(t *testing.T) {
+	t.Setenv("FD_SWITCHES_LUA_STOCK", "false")
+	t.Setenv("FD_SWITCHES_KAFKA_ORDER", "false")
+	cfg, _ := config.Load("")
+	if cfg.Switches.LuaStock || cfg.Switches.KafkaOrder {
+		t.Errorf("switches did not flip: %+v", cfg.Switches)
+	}
+}
