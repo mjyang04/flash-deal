@@ -5,6 +5,7 @@ package kafka_test
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -23,9 +24,31 @@ func brokers(t *testing.T) []string {
 	return strings.Split(v, ",")
 }
 
+func createTopic(t *testing.T, broker, topic string) {
+	t.Helper()
+	conn, err := segkafka.Dial("tcp", broker)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	controller, err := conn.Controller()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cc, err := segkafka.Dial("tcp", controller.Host+":"+strconv.Itoa(controller.Port))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cc.Close()
+	_ = cc.CreateTopics(segkafka.TopicConfig{Topic: topic, NumPartitions: 1, ReplicationFactor: 1})
+	// give kafka a moment to propagate
+	time.Sleep(500 * time.Millisecond)
+}
+
 func TestProducer_RoundTrip(t *testing.T) {
 	topic := "test_producer_roundtrip"
 	bs := brokers(t)
+	createTopic(t, bs[0], topic)
 	p, err := fdkafka.NewProducer(bs, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
