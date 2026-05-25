@@ -6,6 +6,9 @@ import (
 	"time"
 
 	segkafka "github.com/segmentio/kafka-go"
+	otelpkg "go.opentelemetry.io/otel"
+
+	fdotel "github.com/mjyang04/flash-deal/internal/infra/otel"
 )
 
 // Producer wraps a kafka-go Writer for typed sends.
@@ -28,18 +31,22 @@ func NewProducer(brokers []string, produceTimeout time.Duration) (*Producer, err
 }
 
 // SendOrder publishes a single message with key=user_id so per-user ordering is preserved.
+// W3C traceparent is injected into kafka headers when an OTel propagator is registered.
 func (p *Producer) SendOrder(ctx context.Context, topic string, m OrderMessage) error {
 	b, err := m.Marshal()
 	if err != nil {
 		return err
 	}
+	carrier := fdotel.KafkaHeaderCarrier{}
+	otelpkg.GetTextMapPropagator().Inject(ctx, &carrier)
 	cctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 	return p.writer.WriteMessages(cctx, segkafka.Message{
-		Topic: topic,
-		Key:   []byte(strconv.FormatInt(m.UserID, 10)),
-		Value: b,
-		Time:  m.ProducedAt,
+		Topic:   topic,
+		Key:     []byte(strconv.FormatInt(m.UserID, 10)),
+		Value:   b,
+		Time:    m.ProducedAt,
+		Headers: []segkafka.Header(carrier),
 	})
 }
 

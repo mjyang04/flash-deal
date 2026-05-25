@@ -5,6 +5,11 @@ import (
 	"time"
 
 	segkafka "github.com/segmentio/kafka-go"
+	otelpkg "go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
+	fdotel "github.com/mjyang04/flash-deal/internal/infra/otel"
 )
 
 // Handler processes one message and returns nil on success.
@@ -65,15 +70,29 @@ func (c *Consumer) Run(ctx context.Context) error {
 			_ = c.reader.CommitMessages(ctx, msg)
 			continue
 		}
+		// Extract upstream trace context from headers, then start a child span
+		// "kafka.consume" so Jaeger shows api → kafka → consumer as one trace.
+		carrier := fdotel.KafkaHeaderCarrier(msg.Headers)
+		msgCtx := otelpkg.GetTextMapPropagator().Extract(ctx, &carrier)
+		msgCtx, span := otelpkg.Tracer("flash-deal/consumer").Start(msgCtx, "kafka.consume",
+			trace.WithSpanKind(trace.SpanKindConsumer),
+			trace.WithAttributes(
+				attribute.String("messaging.system", "kafka"),
+				attribute.String("messaging.destination.name", c.reader.Config().Topic),
+				attribute.Int64("seckill.order_id", om.OrderID),
+				attribute.Int64("seckill.user_id", om.UserID),
+			),
+		)
 		var lastErr error
 		for attempt := 0; attempt <= c.maxRetries; attempt++ {
 			if attempt > 0 {
 				time.Sleep(time.Duration(attempt) * 100 * time.Millisecond)
 			}
-			if lastErr = c.handler(ctx, om); lastErr == nil {
+			if lastErr = c.handler(msgCtx, om); lastErr == nil {
 				break
 			}
 		}
+		span.End()
 		if lastErr != nil && c.dlq != nil {
 			c.dlq(ctx, msg.Value, lastErr)
 		}
