@@ -8,4 +8,4 @@ scrape_configs:
       - targets: ["host.docker.internal:8080"]
   - job_name: consumer
     static_configs:
-      - targets: ["host.docker.internal:8081"]
+      - targets: ["host.docker.internal:8090"]
