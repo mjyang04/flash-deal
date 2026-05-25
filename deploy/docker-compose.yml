@@ -35,24 +35,32 @@ services:
       timeout: 3s
       retries: 5
 
-  # kafka disabled in M1 (no producer/consumer yet). M2 will re-enable with
-  # apache/kafka:3.8.0 — note: env names drop the _CFG_ infix vs bitnami.
-  # kafka:
-  #   image: apache/kafka:3.8.0
-  #   container_name: fd-kafka
-  #   environment:
-  #     - KAFKA_NODE_ID=1
-  #     - KAFKA_PROCESS_ROLES=broker,controller
-  #     - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
-  #     - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-  #     - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-  #     - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-  #     - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-  #     - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-  #     - CLUSTER_ID=5L6g3nShT-eMCtK--X86sw
-  #     - KAFKA_LOG_DIRS=/tmp/kraft-combined-logs
-  #   ports:
-  #     - "9092:9092"
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: fd-kafka
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - CLUSTER_ID=5L6g3nShT-eMCtK--X86sw
+      - KAFKA_LOG_DIRS=/tmp/kraft-combined-logs
+      # single-broker dev:internal topics must use RF=1
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   # jaeger / prometheus / grafana disabled in M1 (observability lands in M3).
   # Re-enable when wiring OTel + Prom metrics. Tags below may need bumping —

@@ -29,10 +29,26 @@ type RedisConfig struct {
 	PoolSize int    `mapstructure:"pool_size"`
 }
 
+type KafkaConfig struct {
+	Brokers           []string      `mapstructure:"brokers"`
+	OrderTopic        string        `mapstructure:"order_topic"`
+	DLQTopic          string        `mapstructure:"dlq_topic"`
+	ConsumerGroup     string        `mapstructure:"consumer_group"`
+	ProduceTimeout    time.Duration `mapstructure:"produce_timeout"`
+	ConsumerBatchWait time.Duration `mapstructure:"consumer_batch_wait"`
+}
+
+type Switches struct {
+	LuaStock   bool `mapstructure:"lua_stock"`
+	KafkaOrder bool `mapstructure:"kafka_order"`
+}
+
 type Config struct {
-	HTTP  HTTPConfig  `mapstructure:"http"`
-	MySQL MySQLConfig `mapstructure:"mysql"`
-	Redis RedisConfig `mapstructure:"redis"`
+	HTTP     HTTPConfig  `mapstructure:"http"`
+	MySQL    MySQLConfig `mapstructure:"mysql"`
+	Redis    RedisConfig `mapstructure:"redis"`
+	Kafka    KafkaConfig `mapstructure:"kafka"`
+	Switches Switches    `mapstructure:"switches"`
 }
 
 // Load reads config from optional YAML at `path` and overlays env vars.
@@ -56,6 +72,16 @@ func Load(path string) (*Config, error) {
 	v.SetDefault("redis.addr", "127.0.0.1:6380")
 	v.SetDefault("redis.db", 0)
 	v.SetDefault("redis.pool_size", 200)
+
+	v.SetDefault("kafka.brokers", []string{"127.0.0.1:9092"})
+	v.SetDefault("kafka.order_topic", "seckill_orders")
+	v.SetDefault("kafka.dlq_topic", "seckill_orders_dlq")
+	v.SetDefault("kafka.consumer_group", "seckill-consumer")
+	v.SetDefault("kafka.produce_timeout", 2*time.Second)
+	v.SetDefault("kafka.consumer_batch_wait", 100*time.Millisecond)
+
+	v.SetDefault("switches.lua_stock", true)
+	v.SetDefault("switches.kafka_order", true)
 
 	if path != "" {
 		v.SetConfigFile(path)

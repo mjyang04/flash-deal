@@ -2,7 +2,7 @@
 //
 // Run:
 //
-//	make up && make migrate && go run ./cmd/api
+//	make up && make migrate && make kafka-topic && go run ./cmd/api
 package main
 
 import (
@@ -21,6 +21,7 @@ import (
 	"github.com/mjyangnb/flash-deal/internal/config"
 	"github.com/mjyangnb/flash-deal/internal/domain"
 	"github.com/mjyangnb/flash-deal/internal/handler"
+	fdkafka "github.com/mjyangnb/flash-deal/internal/infra/kafka"
 	"github.com/mjyangnb/flash-deal/internal/infra/logger"
 	fdmysql "github.com/mjyangnb/flash-deal/internal/infra/mysql"
 	fdredis "github.com/mjyangnb/flash-deal/internal/infra/redis"
@@ -48,15 +49,35 @@ func main() {
 	defer rdb.Close()
 
 	ar := repo.NewActivityRepo(db)
-	or := repo.NewOrderRepo(db)
-	sr := repo.NewStockRepo(db)
-
-	// snowflake-lite id generator for M1: time-based monotonic int64.
-	var idCounter int64
-	nextID := func() int64 {
-		return time.Now().UnixNano() + atomic.AddInt64(&idCounter, 1)
+	var sr repo.StockRepo
+	if cfg.Switches.LuaStock {
+		sr = repo.NewStockRedisRepo(rdb)
+		log.Println("stock: Redis Lua path")
+	} else {
+		sr = repo.NewStockRepo(db)
+		log.Println("stock: SQL row-lock path (M1 fallback)")
 	}
-	seckillSvc := service.New(ar, sr, or, time.Now, nextID)
+
+	queue := service.NewQueue(rdb)
+
+	var oc service.OrderCreator
+	if cfg.Switches.KafkaOrder {
+		producer, err := fdkafka.NewProducer(cfg.Kafka.Brokers, cfg.Kafka.ProduceTimeout)
+		if err != nil {
+			log.Fatalf("kafka producer: %v", err)
+		}
+		defer producer.Close()
+		oc = service.NewKafkaOrderCreator(producer, cfg.Kafka.OrderTopic)
+		log.Printf("order: Kafka producer → %s", cfg.Kafka.OrderTopic)
+	} else {
+		oc = repo.NewOrderRepo(db)
+		log.Println("order: synchronous MySQL INSERT (M1 fallback)")
+	}
+
+	var idCounter int64
+	nextID := func() int64 { return time.Now().UnixNano() + atomic.AddInt64(&idCounter, 1) }
+
+	seckillSvc := service.New(ar, sr, oc, time.Now, nextID).WithQueue(queue)
 	adminSvc := service.NewAdmin(ar, rdb)
 
 	r := gin.New()
@@ -64,6 +85,7 @@ func main() {
 
 	r.GET("/health", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
 	r.POST("/v1/seckill", handler.Seckill(serviceHandlerAdapter{inner: seckillSvc}))
+	r.GET("/v1/order/by-token/:queue_token", handler.OrderByToken(queue))
 	r.POST("/admin/activities", handler.AdminCreateActivity(adminSvc))
 	r.POST("/admin/activities/:id/warm", handler.AdminWarmActivity(adminSvc))
 
@@ -90,7 +112,6 @@ func main() {
 	}
 }
 
-// serviceHandlerAdapter bridges service.SeckillOutput → handler.SeckillOutput.
 type serviceHandlerAdapter struct {
 	inner *service.SeckillService
 }

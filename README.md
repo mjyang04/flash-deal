@@ -26,13 +26,15 @@ Flash-sale is the highest-frequency interview topic for Chinese internet backend
 | P99 latency | ≤ 50 ms |
 | Stock correctness | 100% (no oversell, no undersell) |
 
-## Quickstart (M1)
+## Quickstart (M2)
 ```bash
-make up              # docker-compose: mysql + redis (M1 only; kafka/jaeger/prom/grafana wake in M2/M3)
+make up              # docker-compose: mysql + redis + kafka (jaeger/prom/grafana wake in M3)
 make migrate         # apply schema: activities + orders_0
+make kafka-topic     # create seckill_orders + seckill_orders_dlq
 make seed            # create demo activity id=1001 stock=1000 + warm Redis
 make api             # start API on :8080
-RATE=1000 DURATION=30s make bench   # k6 baseline
+make consumer        # in another terminal: start kafka consumer (materializes orders)
+RATE=1000 DURATION=30s k6 run bench/k6/seckill_m2.js   # k6 baseline (P95 ~11ms)
 ```
 
 Smoke:
@@ -63,7 +65,7 @@ Task-by-task implementation plans (subagent-driven, TDD):
 ## Status
 - [x] Scaffold
 - [x] **M1 MVP single-node end-to-end** (tag `m1`, baseline: [`reports/week1_mvp.md`](./reports/week1_mvp.md))
-- [ ] M2 Redis Lua + Kafka async
+- [x] **M2 Redis Lua + Kafka async** (tag `m2`, ~200× P95 improvement: [`reports/week2_redis_kafka.md`](./reports/week2_redis_kafka.md))
 - [ ] M3 Sharding + rate-limit + circuit-breaker + observability
 - [ ] M4 Load test + optimization + blog
 

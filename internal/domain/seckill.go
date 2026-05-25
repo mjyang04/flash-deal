@@ -72,6 +72,7 @@ const (
 	OutcomeEnded
 	OutcomeNotFound
 	OutcomeInternal
+	OutcomeNotWarmed // M2: Lua 返回 -3,stock key 未预热
 )
 
 // String returns the canonical wire-name used in the JSON response status field.
@@ -91,6 +92,8 @@ func (o SeckillOutcome) String() string {
 		return "ended"
 	case OutcomeNotFound:
 		return "not_found"
+	case OutcomeNotWarmed:
+		return "not_warmed"
 	default:
 		return "internal"
 	}
