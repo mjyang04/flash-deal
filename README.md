@@ -53,7 +53,12 @@ go test -tags=integration -race ./internal/...      # integration (needs make up
 
 ## Repo layout
 See [CLAUDE.md](./CLAUDE.md) and [plan/](./plan/) for full design.
-M1 task-by-task plan: [`docs/superpowers/plans/2026-05-25-flash-deal-m1-mvp.md`](./docs/superpowers/plans/2026-05-25-flash-deal-m1-mvp.md).
+
+Task-by-task implementation plans (subagent-driven, TDD):
+- [M1 — MVP single-node sync](./docs/superpowers/plans/2026-05-25-flash-deal-m1-mvp.md) ✅ tag `m1`
+- [M2 — Redis Lua + Kafka async](./docs/superpowers/plans/2026-05-25-flash-deal-m2-async.md)
+- [M3 — Sharding + ratelimit/breaker/idempotency + OTel/Prom/Grafana + chaos](./docs/superpowers/plans/2026-05-25-flash-deal-m3-shard-observability.md)
+- [M4 — pprof optimize + final report + release](./docs/superpowers/plans/2026-05-25-flash-deal-m4-optimize-release.md)
 
 ## Status
 - [x] Scaffold
