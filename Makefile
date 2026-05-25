@@ -30,6 +30,19 @@ migrate-shards:
 
 migrate-all: migrate migrate-shards
 
+PPROF_DURATION ?= 30
+pprof-cpu:
+	curl -sS "http://localhost:6060/debug/pprof/profile?seconds=$(PPROF_DURATION)" -o /tmp/cpu.pprof
+	go tool pprof -text /tmp/cpu.pprof | head -30
+
+pprof-heap:
+	curl -sS http://localhost:6060/debug/pprof/heap -o /tmp/heap.pprof
+	go tool pprof -text /tmp/heap.pprof | head -30
+
+pprof-mutex:
+	curl -sS http://localhost:6060/debug/pprof/mutex -o /tmp/mutex.pprof
+	go tool pprof -text /tmp/mutex.pprof | head -30
+
 seed:
 	go run ./cmd/seed
 

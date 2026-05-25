@@ -11,8 +11,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	_ "net/http/pprof" // /debug/pprof/* on :6061
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"github.com/jmoiron/sqlx"
@@ -37,6 +39,17 @@ func main() {
 	if _, err := logger.Init(os.Getenv("FD_LOG_MODE")); err != nil {
 		log.Fatalf("logger: %v", err)
 	}
+
+	if os.Getenv("FD_PROFILE") == "1" {
+		runtime.SetMutexProfileFraction(1)
+		runtime.SetBlockProfileRate(1)
+	}
+	go func() {
+		log.Println("pprof on :6061")
+		if err := http.ListenAndServe(":6061", nil); err != nil {
+			log.Printf("pprof: %v", err)
+		}
+	}()
 
 	rootCtx := context.Background()
 	if cfg.Switches.Tracing && cfg.Otel.Enabled {
