@@ -55,7 +55,7 @@ type SeckillRequest struct {
 
 // SeckillResult is what we hand back to the client after Redis-side reservation.
 type SeckillResult struct {
-	Status     string `json:"status"`      // queued | sold_out | exceeded | duplicate
+	Status     string `json:"status"` // queued | sold_out | exceeded | duplicate
 	QueueToken string `json:"queue_token,omitempty"`
 	Remaining  int    `json:"remaining,omitempty"`
 }
