@@ -65,10 +65,13 @@ func TestProducer_RoundTrip(t *testing.T) {
 	}
 
 	r := segkafka.NewReader(segkafka.ReaderConfig{
-		Brokers: bs, Topic: topic, GroupID: "test_producer_roundtrip_group",
+		Brokers: bs, Topic: topic, Partition: 0,
 		MinBytes: 1, MaxBytes: 1e6,
 	})
 	defer r.Close()
+	if err := r.SetOffset(segkafka.FirstOffset); err != nil {
+		t.Fatal(err)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	rec, err := r.ReadMessage(ctx)
