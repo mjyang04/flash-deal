@@ -63,10 +63,14 @@ func Seckill(svc SeckillService) gin.HandlerFunc {
 }
 
 func writeError(c *gin.Context, status int, code, msg string) {
+	publicMsg := msg
+	if status >= 500 {
+		publicMsg = "internal error" // never echo internal errors to clients
+	}
 	c.JSON(status, gin.H{
 		"error": gin.H{
 			"code":       code,
-			"message":    msg,
+			"message":    publicMsg,
 			"request_id": middleware.RequestIDFrom(c),
 		},
 	})

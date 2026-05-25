@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"runtime/debug"
 
@@ -11,7 +10,9 @@ import (
 	"github.com/mjyang04/flash-deal/internal/infra/logger"
 )
 
-// Recovery converts panics into 500 + structured log including X-Request-Id.
+// Recovery converts panics into 500. Panic content + stack go to server logs
+// only — the client response is a fixed generic message to avoid leaking
+// internal state (driver errors, struct fields, paths, embedded credentials).
 func Recovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -25,7 +26,7 @@ func Recovery() gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 					"error": gin.H{
 						"code":       "INTERNAL",
-						"message":    fmt.Sprintf("internal: %v", r),
+						"message":    "internal error",
 						"request_id": RequestIDFrom(c),
 					},
 				})

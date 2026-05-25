@@ -51,12 +51,14 @@ func main() {
 		runtime.SetBlockProfileRate(1)
 		log.Println("mutex + block profiling enabled (FD_PROFILE=1)")
 	}
-	go func() {
-		log.Println("pprof on :6060 (/debug/pprof/*)")
-		if err := http.ListenAndServe(":6060", nil); err != nil {
-			log.Printf("pprof: %v", err)
-		}
-	}()
+	// pprof bound to loopback (heap dumps include tokens/DSN); opt-in via env.
+	if os.Getenv("FD_PROFILE") == "1" || os.Getenv("FD_PPROF") == "1" {
+		go func() {
+			if err := http.ListenAndServe("127.0.0.1:6060", nil); err != nil {
+				log.Printf("pprof: %v", err)
+			}
+		}()
+	}
 
 	rootCtx := context.Background()
 	if cfg.Switches.Tracing && cfg.Otel.Enabled {

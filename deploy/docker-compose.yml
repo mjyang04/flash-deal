@@ -12,7 +12,7 @@ services:
       - --max_connections=2000
       - --innodb_buffer_pool_size=512M
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
@@ -25,7 +25,7 @@ services:
     image: redis:7-alpine
     container_name: fd-redis
     ports:
-      - "6380:6379"
+      - "127.0.0.1:6380:6379"
     command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb"]
     volumes:
       - redis-data:/data
@@ -68,8 +68,8 @@ services:
     environment:
       - COLLECTOR_OTLP_ENABLED=true
     ports:
-      - "16686:16686"
-      - "4318:4318"
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4318:4318"
 
   prometheus:
     image: prom/prometheus:v3.0.0
@@ -77,7 +77,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -85,9 +85,11 @@ services:
     image: grafana/grafana-oss:11.6.0
     container_name: fd-grafana
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Use a random password for dev (override via GRAFANA_PASSWORD env);
+      # never default to "admin" since localhost binding may slip in dev cloud VMs.
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-changeme-dev}
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana:/etc/grafana/provisioning:ro
