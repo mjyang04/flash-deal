@@ -59,3 +59,39 @@ type SeckillResult struct {
 	QueueToken string `json:"queue_token,omitempty"`
 	Remaining  int    `json:"remaining,omitempty"`
 }
+
+// SeckillOutcome enumerates terminal states of a single seckill attempt.
+type SeckillOutcome int
+
+const (
+	OutcomeQueued SeckillOutcome = iota
+	OutcomeSoldOut
+	OutcomeUserLimit
+	OutcomeDuplicate
+	OutcomeNotStarted
+	OutcomeEnded
+	OutcomeNotFound
+	OutcomeInternal
+)
+
+// String returns the canonical wire-name used in the JSON response status field.
+func (o SeckillOutcome) String() string {
+	switch o {
+	case OutcomeQueued:
+		return "queued"
+	case OutcomeSoldOut:
+		return "sold_out"
+	case OutcomeUserLimit:
+		return "user_limit"
+	case OutcomeDuplicate:
+		return "duplicate"
+	case OutcomeNotStarted:
+		return "not_started"
+	case OutcomeEnded:
+		return "ended"
+	case OutcomeNotFound:
+		return "not_found"
+	default:
+		return "internal"
+	}
+}
