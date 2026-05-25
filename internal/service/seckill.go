@@ -28,6 +28,14 @@ type OrderCreator interface {
 	Create(ctx context.Context, o domain.Order) error
 }
 
+// OrderCreatorWithToken is an optional extension implemented by the Kafka
+// path so that the queue_token can be embedded in the produced message.
+// SeckillService prefers this when the impl satisfies it.
+type OrderCreatorWithToken interface {
+	OrderCreator
+	CreateWithToken(ctx context.Context, o domain.Order, queueToken string) error
+}
+
 // ---- service ----
 
 type SeckillService struct {
@@ -36,6 +44,14 @@ type SeckillService struct {
 	orders     OrderCreator
 	now        func() time.Time
 	nextID     func() int64
+	queue      *QueueService // optional; when set, queue_token is generated + threaded through OrderCreatorWithToken
+}
+
+// WithQueue attaches a QueueService so Seckill returns a server-generated
+// queue_token (UUIDv7) and the OrderCreator gets it via CreateWithToken.
+func (s *SeckillService) WithQueue(q *QueueService) *SeckillService {
+	s.queue = q
+	return s
 }
 
 func New(
@@ -89,10 +105,21 @@ func (s *SeckillService) Seckill(ctx context.Context, req domain.SeckillRequest)
 	}
 
 	orderID := s.nextID()
-	err = s.orders.Create(ctx, domain.Order{
+	o := domain.Order{
 		ID: orderID, UserID: req.UserID, ActivityID: req.ActivityID, ProductID: a.ProductID,
 		Status: domain.OrderQueued, IdempotencyToken: req.IdempotencyToken, CreatedAt: now,
-	})
+	}
+	queueToken := strconv.FormatInt(orderID, 10) // M1 fallback
+	if s.queue != nil {
+		if tok, terr := s.queue.New(ctx); terr == nil {
+			queueToken = tok
+		}
+	}
+	if oct, ok := s.orders.(OrderCreatorWithToken); ok {
+		err = oct.CreateWithToken(ctx, o, queueToken)
+	} else {
+		err = s.orders.Create(ctx, o)
+	}
 	if errors.Is(err, repo.ErrOrderDuplicate) {
 		return SeckillOutput{Outcome: domain.OutcomeDuplicate}, nil
 	}
@@ -103,7 +130,7 @@ func (s *SeckillService) Seckill(ctx context.Context, req domain.SeckillRequest)
 
 	return SeckillOutput{
 		Outcome:    domain.OutcomeQueued,
-		QueueToken: strconv.FormatInt(orderID, 10),
+		QueueToken: queueToken,
 		Remaining:  remaining,
 	}, nil
 }
