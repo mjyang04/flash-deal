@@ -44,6 +44,14 @@ func TestAdmin_CreateActivity(t *testing.T) {
 	if len(stub.created) != 1 || stub.created[0].ID != 9001 {
 		t.Errorf("not stored: %+v", stub.created)
 	}
+	// regression: snake_case json fields must populate PascalCase struct fields.
+	a := stub.created[0]
+	if a.ProductID != 555 || a.TotalStock != 100 || a.PerUserLimit != 1 {
+		t.Errorf("scalar fields mismatch: %+v", a)
+	}
+	if a.StartAt.IsZero() || a.EndAt.IsZero() {
+		t.Errorf("datetime fields unset: start=%v end=%v", a.StartAt, a.EndAt)
+	}
 }
 
 func TestAdmin_WarmActivity(t *testing.T) {

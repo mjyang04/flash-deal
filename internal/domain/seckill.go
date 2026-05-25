@@ -5,13 +5,13 @@ import "time"
 
 // Activity is a flash-sale event.
 type Activity struct {
-	ID            int64
-	ProductID     int64
-	TotalStock    int
-	StartAt       time.Time
-	EndAt         time.Time
-	PerUserLimit  int
-	Status        ActivityStatus
+	ID           int64          `json:"id"`
+	ProductID    int64          `json:"product_id"`
+	TotalStock   int            `json:"total_stock"`
+	StartAt      time.Time      `json:"start_at"`
+	EndAt        time.Time      `json:"end_at"`
+	PerUserLimit int            `json:"per_user_limit"`
+	Status       ActivityStatus `json:"status"`
 }
 
 // ActivityStatus enumerates lifecycle states.
@@ -27,13 +27,13 @@ const (
 
 // Order represents a materialized purchase.
 type Order struct {
-	ID                int64
-	UserID            int64
-	ActivityID        int64
-	ProductID         int64
-	Status            OrderStatus
-	IdempotencyToken  string
-	CreatedAt         time.Time
+	ID               int64       `json:"id"`
+	UserID           int64       `json:"user_id"`
+	ActivityID       int64       `json:"activity_id"`
+	ProductID        int64       `json:"product_id"`
+	Status           OrderStatus `json:"status"`
+	IdempotencyToken string      `json:"idempotency_token"`
+	CreatedAt        time.Time   `json:"created_at"`
 }
 
 // OrderStatus enumerates order lifecycle.
