@@ -16,7 +16,7 @@ migrate-down:
 	docker exec -i fd-mysql mysql -uflashdeal -pflashdeal flashdeal < migrations/001_init.down.sql
 
 seed:
-	@echo "TODO: implement scripts/seed.go to insert demo activity + warm Redis stock"
+	go run ./cmd/seed
 
 api:
 	go run ./cmd/api

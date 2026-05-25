@@ -26,28 +26,46 @@ Flash-sale is the highest-frequency interview topic for Chinese internet backend
 | P99 latency | ≤ 50 ms |
 | Stock correctness | 100% (no oversell, no undersell) |
 
-## Quickstart
+## Quickstart (M1)
 ```bash
-make up              # docker-compose: mysql + redis + kafka + jaeger + prom + grafana
-make migrate         # apply schema
-make seed            # create demo activity + warm Redis stock
-make api             # start API server
-make consumer        # start Kafka consumer (separate terminal)
-make bench           # k6 load test
+make up              # docker-compose: mysql + redis (M1 only; kafka/jaeger/prom/grafana wake in M2/M3)
+make migrate         # apply schema: activities + orders_0
+make seed            # create demo activity id=1001 stock=1000 + warm Redis
+make api             # start API on :8080
+RATE=1000 DURATION=30s make bench   # k6 baseline
 ```
+
+Smoke:
+```bash
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"activity_id":1001,"user_id":1,"idempotency_token":"tok-A"}' \
+  http://localhost:8080/v1/seckill
+# → 202 {"queue_token":"...","remaining":999,"status":"queued"}
+```
+
+## Testing
+```bash
+go test -race -cover ./...                          # unit
+go test -tags=integration -race ./internal/...      # integration (needs make up + make migrate)
+```
+
+`internal/repo.TestStockRepo_Deduct_NoOversell` — 1000 goroutines vs 100 stock, zero oversell.
 
 ## Repo layout
 See [CLAUDE.md](./CLAUDE.md) and [plan/](./plan/) for full design.
+M1 task-by-task plan: [`docs/superpowers/plans/2026-05-25-flash-deal-m1-mvp.md`](./docs/superpowers/plans/2026-05-25-flash-deal-m1-mvp.md).
 
 ## Status
-- [x] Scaffold (this commit)
-- [ ] M1 MVP single-node end-to-end
+- [x] Scaffold
+- [x] **M1 MVP single-node end-to-end** (tag `m1`, baseline: [`reports/week1_mvp.md`](./reports/week1_mvp.md))
 - [ ] M2 Redis Lua + Kafka async
 - [ ] M3 Sharding + rate-limit + circuit-breaker + observability
 - [ ] M4 Load test + optimization + blog
 
-## Note for first run
-Install Go 1.22+ (`brew install go`) before running anything.
+## Prerequisites
+- Docker Desktop
+- Go 1.22+ (`brew install go`)
+- k6 (`brew install k6`) — optional, only for `make bench`
 
 ## License
 MIT
