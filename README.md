@@ -26,15 +26,16 @@ Flash-sale is the highest-frequency interview topic for Chinese internet backend
 | P99 latency | ≤ 50 ms |
 | Stock correctness | 100% (no oversell, no undersell) |
 
-## Quickstart (M2)
+## Quickstart (M3)
 ```bash
-make up              # docker-compose: mysql + redis + kafka (jaeger/prom/grafana wake in M3)
-make migrate         # apply schema: activities + orders_0
-make kafka-topic     # create seckill_orders + seckill_orders_dlq
-make seed            # create demo activity id=1001 stock=1000 + warm Redis
-make api             # start API on :8080
-make consumer        # in another terminal: start kafka consumer (materializes orders)
-RATE=1000 DURATION=30s k6 run bench/k6/seckill_m2.js   # k6 baseline (P95 ~11ms)
+make up              # mysql + redis + kafka + jaeger + prometheus + grafana
+make migrate-all     # activities + 4-shard orders (flashdeal_0..3)
+make kafka-topic     # seckill_orders + seckill_orders_dlq
+make seed            # demo activity id=1001 stock=1000 + warm Redis
+make api             # API on :8080 (with tracing/metrics/ratelimit/idempotency)
+make consumer        # consumer with breaker + metrics on :8090
+RATE=1000 DURATION=30s k6 run bench/k6/seckill_m3.js
+# Jaeger http://localhost:16686, Prometheus :9090, Grafana :3001 (admin/admin)
 ```
 
 Smoke:
@@ -66,7 +67,7 @@ Task-by-task implementation plans (subagent-driven, TDD):
 - [x] Scaffold
 - [x] **M1 MVP single-node end-to-end** (tag `m1`, baseline: [`reports/week1_mvp.md`](./reports/week1_mvp.md))
 - [x] **M2 Redis Lua + Kafka async** (tag `m2`, ~200× P95 improvement: [`reports/week2_redis_kafka.md`](./reports/week2_redis_kafka.md))
-- [ ] M3 Sharding + rate-limit + circuit-breaker + observability
+- [x] **M3 Sharding + ratelimit/idempotency/breaker + OTel/Prom/Grafana** (tag `m3`, [`reports/week3_observability.md`](./reports/week3_observability.md))
 - [ ] M4 Load test + optimization + blog
 
 ## Prerequisites

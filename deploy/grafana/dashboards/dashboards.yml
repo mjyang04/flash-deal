@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: 'flash-deal'
+    folder: 'flash-deal'
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards

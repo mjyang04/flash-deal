@@ -1,0 +1,66 @@
+{
+  "id": null,
+  "uid": "flash-deal",
+  "title": "flash-deal seckill",
+  "tags": ["flash-deal"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "timeseries", "title": "RPS",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "sum(rate(http_request_duration_seconds_count[1m]))", "legendFormat": "rps" }
+      ]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Success rate (non-5xx)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "sum(rate(http_request_duration_seconds_count{status!~\"5..\"}[1m])) / sum(rate(http_request_duration_seconds_count[1m]))", "legendFormat": "success_rate" }
+      ]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Latency P50/P95/P99",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Stock remaining",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "seckill_stock_remain", "legendFormat": "{{activity_id}}" }
+      ]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "DLQ rate + ratelimit + idempotent replays",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "rate(seckill_dlq_total[1m])", "legendFormat": "dlq" },
+        { "expr": "rate(seckill_ratelimit_total[1m])", "legendFormat": "ratelimit/{{scope}}" },
+        { "expr": "rate(seckill_idempotent_replay_total[1m])", "legendFormat": "idem_replay" }
+      ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Kafka produce + Lua latency P99",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        { "expr": "histogram_quantile(0.99, rate(kafka_produce_duration_seconds_bucket[1m]))", "legendFormat": "kafka_p99" },
+        { "expr": "histogram_quantile(0.99, rate(seckill_lua_duration_seconds_bucket[1m]))", "legendFormat": "lua_p99" }
+      ]
+    }
+  ]
+}

@@ -58,11 +58,16 @@ VALUES (?, ?, ?, ?, ?, ?, ?)`
 }
 
 func (r *orderRepoSQL) GetByID(ctx context.Context, userID, orderID int64) (domain.Order, error) {
+	return getOrderFromDB(ctx, r.db, userID, orderID)
+}
+
+// getOrderFromDB is shared by the single-shard and the sharded impls.
+func getOrderFromDB(ctx context.Context, db *sqlx.DB, userID, orderID int64) (domain.Order, error) {
 	var row orderRow
 	const q = `
 SELECT id, user_id, activity_id, product_id, status, idempotency_token, created_at
   FROM orders_0 WHERE user_id = ? AND id = ?`
-	err := r.db.GetContext(ctx, &row, q, userID, orderID)
+	err := db.GetContext(ctx, &row, q, userID, orderID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Order{}, ErrOrderNotFound
 	}

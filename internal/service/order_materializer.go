@@ -13,15 +13,28 @@ import (
 	"github.com/mjyangnb/flash-deal/internal/repo"
 )
 
+// Breaker is the optional circuit-breaker port (sony/gobreaker).
+type Breaker interface {
+	Do(fn func() error) error
+}
+
 // OrderMaterializer is the consumer-side business: turn a Kafka OrderMessage
 // into a row in MySQL and update the queue-token state in Redis.
+// If `breaker` is non-nil it wraps the MySQL Create call.
 type OrderMaterializer struct {
-	orders repo.OrderRepo
-	rdb    *goredis.Client
+	orders  repo.OrderRepo
+	rdb     *goredis.Client
+	breaker Breaker
 }
 
 func NewOrderMaterializer(orders repo.OrderRepo, rdb *goredis.Client) *OrderMaterializer {
 	return &OrderMaterializer{orders: orders, rdb: rdb}
+}
+
+// WithBreaker attaches a circuit breaker around the MySQL write path.
+func (m *OrderMaterializer) WithBreaker(b Breaker) *OrderMaterializer {
+	m.breaker = b
+	return m
 }
 
 // Handle is the kafka.Handler. Idempotent: duplicate insert → treat as success
@@ -32,7 +45,13 @@ func (m *OrderMaterializer) Handle(ctx context.Context, msg fdkafka.OrderMessage
 		ProductID: msg.ProductID, Status: domain.OrderQueued,
 		IdempotencyToken: msg.IdempotencyToken, CreatedAt: msg.ProducedAt,
 	}
-	err := m.orders.Create(ctx, o)
+	insert := func() error { return m.orders.Create(ctx, o) }
+	var err error
+	if m.breaker != nil {
+		err = m.breaker.Do(insert)
+	} else {
+		err = insert()
+	}
 	if err != nil && !errors.Is(err, repo.ErrOrderDuplicate) {
 		return err
 	}
