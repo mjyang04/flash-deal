@@ -14,6 +14,8 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
+	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -132,6 +134,16 @@ func main() {
 	seckillSvc := service.New(ar, sr, oc, time.Now, nextID).WithQueue(queue)
 	adminSvc := service.NewAdmin(ar, rdb)
 
+	// Reconcile sweeper:opt-in via FD_RECONCILE_ACTIVITY_IDS="1001,1002,..."
+	if env := os.Getenv("FD_RECONCILE_ACTIVITY_IDS"); env != "" {
+		ids := parseInt64List(env)
+		recon := service.NewReconcile(ar, rdb, shards, db, 5*time.Minute)
+		go func() {
+			log.Printf("reconcile sweeper: watching %d activities (5min interval)", len(ids))
+			_ = recon.Run(rootCtx, ids)
+		}()
+	}
+
 	r := gin.New()
 	r.Use(middleware.RequestID(), middleware.Recovery())
 	if cfg.Switches.Metrics {
@@ -175,6 +187,22 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("shutdown: %v", err)
 	}
+}
+
+// parseInt64List parses "1001,1002,1003" → []int64{1001, 1002, 1003}.
+// Invalid tokens are skipped.
+func parseInt64List(s string) []int64 {
+	var out []int64
+	for _, tok := range strings.Split(s, ",") {
+		tok = strings.TrimSpace(tok)
+		if tok == "" {
+			continue
+		}
+		if v, err := strconv.ParseInt(tok, 10, 64); err == nil {
+			out = append(out, v)
+		}
+	}
+	return out
 }
 
 type serviceHandlerAdapter struct {
